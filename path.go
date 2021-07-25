@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -51,6 +52,22 @@ func ParsePath(p string) Path {
 			ResourcePath:          p,
 		}
 	}
+}
+
+// ParsePathFromReferer tries to create a Path from the Referer header of the request.
+func ParsePathFromReferer(p Path, r string) (Path, error) {
+	u, err := url.Parse(r)
+	if err != nil {
+		return Path{}, err
+	}
+
+	// p has the correct resource path but the wrong port, so we create a new path
+	// with the correct data from both.
+	rp := ParsePath(u.Path)
+	return Path{
+		DestinationIdentifier: rp.DestinationIdentifier,
+		ResourcePath:          p.ResourcePath,
+	}, nil
 }
 
 // MakeUrl creates the URL on the destination host that the user wants to access.

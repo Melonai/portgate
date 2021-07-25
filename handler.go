@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/valyala/fasthttp"
 	"net/http"
 )
@@ -23,8 +24,18 @@ func (h *RequestHandler) handleRequest(ctx *fasthttp.RequestCtx) {
 		if path.ResourcePath == "/_portgate" {
 			h.handlePortgateRequest(ctx)
 		} else {
-			// TODO: Try to grab actual destination from Referer header.
-			h.handleUnknownRequest(ctx)
+			// Try to grab actual destination from Referer header.
+			refererPath, err := ParsePathFromReferer(path, string(ctx.Request.Header.Referer()))
+			if err != nil || refererPath.DestinationIdentifier == -1 {
+				// The referer path also has no destination
+				h.handleUnknownRequest(ctx)
+			} else {
+				// We found the destination from the referer path, so we
+				// redirect the user to the Portgate URL they should've requested.
+
+				portgateUrl := fmt.Sprintf("/%d%s", refererPath.DestinationIdentifier, refererPath.ResourcePath)
+				ctx.Redirect(portgateUrl, http.StatusTemporaryRedirect)
+			}
 		}
 	} else {
 		// We were given a port, so we have to pass the request through to the destination host.
