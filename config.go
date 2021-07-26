@@ -13,6 +13,10 @@ type Config struct {
 
 	allowedPorts   []int
 	forbiddenPorts []int
+
+	key string
+
+	jwtSecret string
 }
 
 // GetConfig creates the Portgate config from outside sources such as
@@ -25,6 +29,8 @@ func GetConfig() (Config, error) {
 
 		allowedPorts:   []int{80},
 		forbiddenPorts: []int{},
+
+		key: "password",
 	}, nil
 }
 
@@ -42,4 +48,9 @@ func (c *Config) TargetAddress(port int) string {
 func (c *Config) MakeUrl(p Path) string {
 	// TODO: Figure out what to do with TLS
 	return fmt.Sprintf("http://%s:%d%s", c.targetHost, p.DestinationIdentifier, p.ResourcePath)
+}
+
+// CheckKey checks whether the givenKey matches the one in the config.
+func (c *Config) CheckKey(givenKey string) bool {
+	return c.key == givenKey
 }

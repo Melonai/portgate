@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
+	"net/http"
 	"portgate"
+	"time"
 )
 
 // handlePortgateRequest handles all Portgate specific request for either showing Portgate
@@ -32,14 +34,49 @@ func (h *RequestHandler) handlePortgateIndexRequest(ctx *fasthttp.RequestCtx) {
 // handlePortgatePageRequest renders the Portgate page with either the authentication page or
 // a basic information page.
 func (h *RequestHandler) handlePortgatePageRequest(ctx *fasthttp.RequestCtx) {
-	// We render the page template and pass it to the user.
 	ctx.Response.Header.SetContentType("text/html")
-	err := h.templates.ExecuteTemplate(ctx, "authenticate.template.html", nil)
+
+	var err error
+
+	// We render the page template and pass it to the user.
+	if portgate.VerifyTokenFromCookie(h.config, ctx) {
+		// User is authenticated, show the information page
+		err = h.templates.ExecuteTemplate(ctx, "information.template.html", nil)
+	} else {
+		// Show the authentication page
+		err = h.templates.ExecuteTemplate(ctx, "authenticate.template.html", nil)
+	}
+
 	if err != nil {
 		h.handleError(ctx)
 	}
 }
 
 func (h *RequestHandler) handleAuthenticateRequest(ctx *fasthttp.RequestCtx) {
-	// TODO
+
+	givenKey := ctx.PostArgs().Peek("key")
+	if givenKey == nil || !h.config.CheckKey(string(givenKey)) {
+		ctx.Error("Wrong key.", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := portgate.CreateToken(h.config, string(givenKey))
+	if err != nil {
+		h.handleError(ctx)
+	}
+
+	cookie := fasthttp.AcquireCookie()
+	defer fasthttp.ReleaseCookie(cookie)
+
+	cookie.SetExpire(portgate.GetExpirationDateFrom(time.Now()))
+	cookie.SetSameSite(fasthttp.CookieSameSiteStrictMode)
+	cookie.SetHTTPOnly(true)
+	cookie.SetKey("_portgate_token")
+	cookie.SetValue(token)
+
+	ctx.Response.Header.SetCookie(cookie)
+
+	// TODO: Redirect to previously request path.
+	// http.StatusFound redirects a POST request to a GET request.
+	ctx.Redirect("/_portgate", http.StatusFound)
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
+	"net/http"
 	"portgate"
 )
 
@@ -9,8 +10,13 @@ import (
 // If the user is authorized they are allowed to pass, otherwise they should be redirected to
 // the authentication page. (/_portgate)
 func (h *RequestHandler) handlePassthroughRequest(ctx *fasthttp.RequestCtx, p portgate.Path) {
-	// TODO: Check authorization.
 	// TODO: Check whether port is allowed to be accessed.
+
+	// Check whether given cookie is ok, if not redirect to the authentication page.
+	if !portgate.VerifyTokenFromCookie(h.config, ctx) {
+		ctx.Redirect("/_portgate", http.StatusTemporaryRedirect)
+		return
+	}
 
 	// We reuse the request given to us by the user with minor changes to route it to the
 	// destination host.
