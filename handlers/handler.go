@@ -76,6 +76,11 @@ func (h *RequestHandler) HandleRequest(ctx *fasthttp.RequestCtx) {
 // information.
 func (h *RequestHandler) handleUnknownRequest(ctx *fasthttp.RequestCtx) {
 	// TODO: Show error page
-	ctx.SetStatusCode(http.StatusNotFound)
-	_, _ = ctx.WriteString("Unknown request.")
+	ctx.Error("Unknown request.", http.StatusNotFound)
+}
+
+// handleUnknownRequest handles errors which occurred during a request with a generic message.
+func (h *RequestHandler) handleError(ctx *fasthttp.RequestCtx) {
+	// TODO: Show error page
+	ctx.Error("An error occurred", http.StatusInternalServerError)
 }

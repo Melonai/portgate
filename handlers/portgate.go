@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
-	"net/http"
 	"portgate"
 )
 
@@ -37,8 +36,7 @@ func (h *RequestHandler) handlePortgatePageRequest(ctx *fasthttp.RequestCtx) {
 	ctx.Response.Header.SetContentType("text/html")
 	err := h.templates.ExecuteTemplate(ctx, "authenticate.template.html", nil)
 	if err != nil {
-		ctx.SetStatusCode(http.StatusInternalServerError)
-		_, _ = ctx.WriteString("An error occurred.")
+		h.handleError(ctx)
 	}
 }
 

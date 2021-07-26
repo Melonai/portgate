@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
-	"net/http"
 	"portgate"
 )
 
@@ -16,14 +15,13 @@ func (h *RequestHandler) handlePassthroughRequest(ctx *fasthttp.RequestCtx, p po
 	// We reuse the request given to us by the user with minor changes to route it to the
 	// destination host.
 	ctx.Request.SetRequestURI(h.config.MakeUrl(p))
-	ctx.Request.Header.Set("Host", h.config.TargetAddress(p.DestinationIdentifier))
+	ctx.Request.Header.SetHost(h.config.TargetAddress(p.DestinationIdentifier))
 
 	// We pipe the response given to us by the destination host back to the user.
 	// Since it's possible that we get a redirect, we take this into account,
 	// but only allow upto 10 redirects.
 	err := h.client.DoRedirects(&ctx.Request, &ctx.Response, 10)
 	if err != nil {
-		ctx.SetStatusCode(http.StatusInternalServerError)
-		_, _ = ctx.WriteString("An error occurred.")
+		h.handleError(ctx)
 	}
 }
