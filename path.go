@@ -68,3 +68,13 @@ func ParsePathFromReferer(p Path, r string) (Path, error) {
 		ResourcePath:          p.ResourcePath,
 	}, nil
 }
+
+// IsPortgatePath returns whether the Path goes to Portgate.
+func (p *Path) IsPortgatePath() bool {
+	return p.DestinationIdentifier == -1 && strings.HasPrefix(p.ResourcePath, "/_portgate")
+}
+
+// IsPortgateStaticPath returns whether the Path goes to the Portgate static files.
+func (p *Path) IsPortgateStaticPath() bool {
+	return p.DestinationIdentifier == -1 && strings.HasPrefix(p.ResourcePath, "/_portgate/static")
+}

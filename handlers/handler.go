@@ -5,6 +5,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"net/http"
 	"portgate"
+	"strings"
 )
 
 // RequestHandler keeps data relevant to the request handlers.
@@ -13,12 +14,29 @@ type RequestHandler struct {
 	config *portgate.Config
 	// HTTP Client for requesting resources from the destination host.
 	client fasthttp.Client
+	// Handler for static Portgate assets.
+	staticHandler fasthttp.RequestHandler
+	// Templates for Portgate pages.
+	templates portgate.Templates
 }
 
-func NewRequestHandler(config *portgate.Config) RequestHandler {
+// NewRequestHandler creates a new RequestHandler instance.
+func NewRequestHandler(config *portgate.Config, templates portgate.Templates) RequestHandler {
+	// Serves static Portgate files when called.
+	fs := fasthttp.FS{
+		Root: "./assets/static/",
+		PathRewrite: func(ctx *fasthttp.RequestCtx) []byte {
+			return []byte(strings.TrimPrefix(string(ctx.Path()), "/_portgate/static"))
+		},
+		PathNotFound: nil,
+	}
+	staticHandler := fs.NewRequestHandler()
+
 	return RequestHandler{
-		config: config,
-		client: fasthttp.Client{},
+		config:        config,
+		client:        fasthttp.Client{},
+		staticHandler: staticHandler,
+		templates:     templates,
 	}
 }
 
@@ -26,24 +44,26 @@ func NewRequestHandler(config *portgate.Config) RequestHandler {
 func (h *RequestHandler) HandleRequest(ctx *fasthttp.RequestCtx) {
 	path := portgate.ParsePath(string(ctx.Path()))
 
+	if path.IsPortgatePath() {
+		h.handlePortgateRequest(ctx, path)
+		return
+	}
+
 	if path.DestinationIdentifier == -1 {
-		// We were not given a port.
+		// We were not given a destination.
 
-		if path.ResourcePath == "/_portgate" {
-			h.handlePortgateRequest(ctx)
+		// Try to grab actual destination from Referer header.
+		// This can help us if the user followed an absolute link on a proxied page.
+		refererPath, err := portgate.ParsePathFromReferer(path, string(ctx.Request.Header.Referer()))
+		if err != nil || refererPath.DestinationIdentifier == -1 {
+			// The referer path also has no destination
+			h.handleUnknownRequest(ctx)
 		} else {
-			// Try to grab actual destination from Referer header.
-			refererPath, err := portgate.ParsePathFromReferer(path, string(ctx.Request.Header.Referer()))
-			if err != nil || refererPath.DestinationIdentifier == -1 {
-				// The referer path also has no destination
-				h.handleUnknownRequest(ctx)
-			} else {
-				// We found the destination from the referer path, so we
-				// redirect the user to the Portgate URL they should've requested.
+			// We found the destination from the referer path, so we
+			// redirect the user to the Portgate URL they should've requested.
 
-				portgateUrl := fmt.Sprintf("/%d%s", refererPath.DestinationIdentifier, refererPath.ResourcePath)
-				ctx.Redirect(portgateUrl, http.StatusTemporaryRedirect)
-			}
+			portgateUrl := fmt.Sprintf("/%d%s", refererPath.DestinationIdentifier, refererPath.ResourcePath)
+			ctx.Redirect(portgateUrl, http.StatusTemporaryRedirect)
 		}
 	} else {
 		// We were given a port, so we have to pass the request through to the destination host.

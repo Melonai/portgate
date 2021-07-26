@@ -17,8 +17,11 @@ func main() {
 		log.Fatal("Failed to get Portgate config.")
 	}
 
+	// Load and Parse all Portgate templates
+	templates, _ := portgate.LoadAllTemplates()
+
 	// Create handler for requests
-	handler := handlers.NewRequestHandler(&config)
+	handler := handlers.NewRequestHandler(&config, templates)
 
 	// Start to listen to the outside world.
 	log.Print("Listening for requests on port 8080.")
