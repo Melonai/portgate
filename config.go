@@ -1,4 +1,4 @@
-package main
+package portgate
 
 import "fmt"
 
@@ -36,4 +36,10 @@ func (c *Config) PortgateAddress() string {
 // TargetAddress is the address of the destination server.
 func (c *Config) TargetAddress(port int) string {
 	return fmt.Sprintf("%s:%d", c.targetHost, port)
+}
+
+// MakeUrl creates the URL on the destination host that the user wants to access.
+func (c *Config) MakeUrl(p Path) string {
+	// TODO: Figure out what to do with TLS
+	return fmt.Sprintf("http://%s:%d%s", c.targetHost, p.DestinationIdentifier, p.ResourcePath)
 }

@@ -1,7 +1,6 @@
-package main
+package portgate
 
 import (
-	"fmt"
 	"net/url"
 	"path"
 	"strconv"
@@ -68,10 +67,4 @@ func ParsePathFromReferer(p Path, r string) (Path, error) {
 		DestinationIdentifier: rp.DestinationIdentifier,
 		ResourcePath:          p.ResourcePath,
 	}, nil
-}
-
-// MakeUrl creates the URL on the destination host that the user wants to access.
-func (p *Path) MakeUrl(targetHost string) string {
-	// TODO: Figure out what to do with TLS
-	return fmt.Sprintf("http://%s:%d%s", targetHost, p.DestinationIdentifier, p.ResourcePath)
 }
