@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Portgate</title>
-</head>
-<body>
-    <h2>Portgate</h2>
-    {{template "content"}}
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Portgate</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="_portgate/static/index.css" />
+    </head>
+    <body>
+        <div class="container">
+            <img
+                class="logo"
+                src="_portgate/static/portgate.svg"
+                alt="Portgate"
+            />
+            <h1 class="title">Portgate</h1>
+            {{template "content"}}
+        </div>
+    </body>
 </html>

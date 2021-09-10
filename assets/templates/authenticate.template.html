@@ -1,9 +1,10 @@
 {{define "content"}}
-<h1>Authentication</h1>
-<form method="POST">
-    <label>
-        <input type="text" name="key">
-    </label>
-    <input type="submit" value="Authenticate">
+<p class="description">
+    Please authenticate yourself to access <br />
+    this port on this host.
+</p>
+<form method="POST" class="authentication-form">
+    <input class="authentication-input" type="password" name="key" />
+    <input class="authentication-button" type="submit" value="→" />
 </form>
 {{end}}

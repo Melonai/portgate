@@ -1,0 +1,64 @@
+@font-face {
+    font-family: "Inter Light";
+    src: url("/_portgate/static/fonts/Inter-Light.ttf");
+}
+
+@font-face {
+    font-family: "Inter Medium";
+    src: url("/_portgate/static/fonts/Inter-Medium.ttf");
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    margin: 0;
+
+    background-color: #6d6d7a;
+    color: #ffffff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: "Inter Light";
+    font-size: 16px;
+}
+
+.container {
+    width: 500px;
+}
+
+.logo {
+    width: 40px;
+}
+
+.title {
+    font-family: "Inter Medium";
+    font-size: 22px;
+}
+
+.description {
+    font-size: 18px;
+    margin-bottom: 24px;
+}
+
+.authentication-form {
+    display: flex;
+}
+
+.authentication-input {
+    flex-grow: 1;
+    border: none;
+    padding: 15px;
+}
+
+.authentication-button {
+    color: #ffffff;
+    width: 50px;
+    background-color: transparent;
+    border: none;
+}
