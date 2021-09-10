@@ -45,9 +45,9 @@ func (c *Config) TargetAddress(port int) string {
 }
 
 // MakeUrl creates the URL on the destination host that the user wants to access.
-func (c *Config) MakeUrl(p Path) string {
+func (c *Config) MakeUrl(p Destination) string {
 	// TODO: Figure out what to do with TLS
-	return fmt.Sprintf("http://%s:%d%s", c.targetHost, p.DestinationIdentifier, p.ResourcePath)
+	return fmt.Sprintf("http://%s:%d%s", c.targetHost, p.Port, p.Path)
 }
 
 // CheckKey checks whether the givenKey matches the one in the config.

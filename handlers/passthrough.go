@@ -9,7 +9,7 @@ import (
 // handlePassthroughRequest handles requests which are supposed to be proxied to the destination host.
 // If the user is authorized they are allowed to pass, otherwise they should be redirected to
 // the authentication page. (/_portgate)
-func (h *RequestHandler) handlePassthroughRequest(ctx *fasthttp.RequestCtx, p portgate.Path) {
+func (h *RequestHandler) handlePassthroughRequest(ctx *fasthttp.RequestCtx, p portgate.Destination) {
 	// TODO: Check whether port is allowed to be accessed.
 
 	// Check whether given cookie is ok, if not redirect to the authentication page.
@@ -21,7 +21,7 @@ func (h *RequestHandler) handlePassthroughRequest(ctx *fasthttp.RequestCtx, p po
 	// We reuse the request given to us by the user with minor changes to route it to the
 	// destination host.
 	ctx.Request.SetRequestURI(h.config.MakeUrl(p))
-	ctx.Request.Header.SetHost(h.config.TargetAddress(p.DestinationIdentifier))
+	ctx.Request.Header.SetHost(h.config.TargetAddress(p.Port))
 
 	// We pipe the response given to us by the destination host back to the user.
 	// Since it's possible that we get a redirect, we take this into account,

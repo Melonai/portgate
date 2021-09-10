@@ -1,16 +1,18 @@
 package handlers
 
 import (
-	"github.com/valyala/fasthttp"
 	"net/http"
 	"portgate"
+	"strings"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 // handlePortgateRequest handles all Portgate specific request for either showing Portgate
 // specific pages or handling creation of authorization tokens.
-func (h *RequestHandler) handlePortgateRequest(ctx *fasthttp.RequestCtx, path portgate.Path) {
-	if path.IsPortgateStaticPath() {
+func (h *RequestHandler) handlePortgateRequest(ctx *fasthttp.RequestCtx, destination portgate.Destination) {
+	if strings.HasPrefix(destination.Path, "/_portgate/static") {
 		h.staticHandler(ctx)
 	} else {
 		// TODO: Implement authentication, authorization

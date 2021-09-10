@@ -42,34 +42,29 @@ func NewRequestHandler(config *portgate.Config, templates portgate.Templates) Re
 
 // HandleRequest handles all types of requests and delegates to more specific handlers.
 func (h *RequestHandler) HandleRequest(ctx *fasthttp.RequestCtx) {
-	path := portgate.ParsePath(string(ctx.Path()))
+	destination := portgate.DestinationFromURL(string(ctx.Path()))
 
-	if path.IsPortgatePath() {
-		h.handlePortgateRequest(ctx, path)
+	if destination.IsPortgatePath {
+		h.handlePortgateRequest(ctx, destination)
 		return
 	}
 
-	if path.DestinationIdentifier == -1 {
-		// We were not given a destination.
+	if destination.Port == 0 {
+		// Try to get the port from the Referer.
+		destination = destination.AddReferer(string(ctx.Request.Header.Referer()))
 
-		// Try to grab actual destination from Referer header.
-		// This can help us if the user followed an absolute link on a proxied page.
-		refererPath, err := portgate.ParsePathFromReferer(path, string(ctx.Request.Header.Referer()))
-		if err != nil || refererPath.DestinationIdentifier == -1 {
-			// The referer path also has no destination
+		// Still no port?
+		if destination.Port == 0 {
 			h.handleUnknownRequest(ctx)
-		} else {
-			// We found the destination from the referer path, so we
-			// redirect the user to the Portgate URL they should've requested.
-
-			portgateUrl := fmt.Sprintf("/%d%s", refererPath.DestinationIdentifier, refererPath.ResourcePath)
-			ctx.Redirect(portgateUrl, http.StatusTemporaryRedirect)
+			return
 		}
-	} else {
-		// We were given a port, so we have to pass the request through to the destination host.
 
-		h.handlePassthroughRequest(ctx, path)
+		portgateUrl := fmt.Sprintf("/%d%s", destination.Port, destination.Path)
+		ctx.Redirect(portgateUrl, http.StatusTemporaryRedirect)
+		return
 	}
+
+	h.handlePassthroughRequest(ctx, destination)
 }
 
 // handleUnknownRequest handles any request which could not be processed due to missing
